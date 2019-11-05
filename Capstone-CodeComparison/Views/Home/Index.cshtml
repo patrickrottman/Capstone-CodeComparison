@@ -2,30 +2,121 @@
     ViewBag.Title = "Home Page";
 }
 
-<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-</div>
+@*<div class="jumbotron">
+        <h1>ASP.NET</h1>
+        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+        <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+    </div>*@
 
 <div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+    <div class="alert alert-info">
+        <h2>Instructions:</h2>
+        <div style="margin-left: 10px">
+            <p>
+                Choose the original Canvas .zip file by selecting the upload button below.<br />
+                Choose a programming language with the dropdown.<br />
+                Choose either download unzipped Canvas file or Compare buttons.
+            </p>
+        </div>
     </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
+</div>
+<hr />
+<div class="row">
+    <div class="col-md-4 alert" style="border-color: #b5b5b5;background: #efefef;">
+        <h3>Options:</h3>
+        @*<h2>Getting started</h2>
+            <p>
+                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
+                enables a clean separation of concerns and gives you full control over markup
+                for enjoyable, agile development.
+            </p>
+            <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>*@
+        <label for="labelUploadButton">Select Canvas .ZIP file:</label>
+        <label id="labelUploadButton" for="canvasUpload" class="btn btn-primary btn-file">
+            <span>Browse</span>
+            <input id="canvasUpload" type="file" style="display: none;" accept=".zip">
+        </label>
+        <br /><br />
+        @Html.DropDownList("LanguageDropDownList", null, "Choose Language:", htmlAttributes: new { id = "languageDropDown", @class = "form-control" })
+
+        <br />
+        <div class="btn-group" role="group">
+            @Html.ActionLink("Download", "Download", "FileProcessing", null, new {@class="btn btn-info", type="download"})
+            @*<button onclick="Upload()" class="btn btn-info" title="Download the original canvas file that has all of it's internal files unzipped.">Download</button>*@
+            <button onclick="Upload()" class="btn btn-success">Scan Similarities</button>
+        </div>
+        <div class="loader" id="spinner"></div>
+
     </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
+
+    <div class="col-md-8">
+        <h2>this is where the content will go. rows of students and similarnesss</h2>
         <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
         <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
     </div>
 </div>
+
+
+<script>
+    $("#spinner").hide();
+
+
+    function Upload() {
+        $("#spinner").show();
+
+        var files = document.getElementById("canvasUpload").files;
+        if (files.length > 0) {
+            if (window.FormData !== undefined) {
+                var data = new FormData();
+                for (var x = 0; x < files.length; x++) {
+                    data.append(files[x].name, files[x]);
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("Upload", "FileProcessing")",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (result) {
+                        $("#spinner").hide();
+                        console.log(result);
+                    },
+                    error: function (xhr, status, p3, p4) {
+                        var err = "Error " + " " + status + " " + p3 + " " + p4;
+                        if (xhr.responseText && xhr.responseText[0] == "{")
+                            err = JSON.parse(xhr.responseText).Message;
+                        console.log(err);
+                    }
+                });
+            } else {
+                alert("This browser doesn't support HTML5 file uploads!");
+            }
+        }
+
+    }
+
+    $(function () {
+
+        $(document).on('change', ':file', function () {
+            var input = $(this),
+                numFiles = input.get(0).files ? input.get(0).files.length : 1,
+                label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            input.trigger('fileselect', [numFiles, label]);
+        });
+
+        $(document).ready(function () {
+            $(':file').on('fileselect', function (event, numFiles, label) {
+                if (numFiles > 0) {
+                    $(this).parent().find('span').text(label);
+                } else {
+                    $(this).parent().find('span').text("Browse");
+                }
+
+            });
+        });
+
+    });
+
+
+</script>
