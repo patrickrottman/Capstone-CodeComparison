@@ -39,16 +39,19 @@ namespace Capstone_CodeComparison.Controllers
                         Session["FileContentName"] = fileName;
 
                         //https://stackoverflow.com/questions/31914568/save-an-attachment-in-session
+
+                        return Json("File uploaded successfully", JsonRequestBehavior.AllowGet);
                     }
                 }
             }
             catch (Exception)
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                return Json("Upload failed");
+                return Json("Upload failed", JsonRequestBehavior.AllowGet);
             }
 
-            return Json("File uploaded successfully");
+            return Json("exiting upload", JsonRequestBehavior.AllowGet);
+            
         }
 
         public ActionResult Download()
