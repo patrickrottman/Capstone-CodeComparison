@@ -10,7 +10,7 @@ namespace Capstone_CodeComparison.Controllers
     {
         public ActionResult Index()
         {
-            ViewBag.LanguageDropDownList = new SelectList(new List<String> {"C#", "HTML", "C", "Python"});
+            ViewBag.LanguageDropDownList = new SelectList(new List<String> {"C#", "HTML", "C", "Python", "CSS", "Java"});
             return View();
         }
 

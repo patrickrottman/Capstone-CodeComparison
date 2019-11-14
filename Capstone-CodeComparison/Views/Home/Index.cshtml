@@ -34,7 +34,7 @@
         <label for="labelUploadButton">Select Canvas .ZIP file:</label>
         <label id="labelUploadButton" for="canvasUpload" class="btn btn-primary btn-file">
             <span>Browse</span>
-            <input id="canvasUpload" type="file" style="display: none;" @*accept=".zip"*@>
+            <input id="canvasUpload" type="file" style="display: none;" accept=".zip">
         </label>
         <br /><br />
         @Html.DropDownList("LanguageDropDownList", null, "Choose Language:", htmlAttributes: new { id = "languageDropDown", @class = "form-control" })
@@ -49,81 +49,8 @@
 
     </div>
 
-    <div class="col-md-8">
-
-        <h2>Sample Output:</h2>
-        <p>This is where similarity percentages will be displayed as well as the corresponding pawprints.</p>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Pawprint</th>
-                    <th>Pawprint</th>
-                    <th>Similarity Percentage</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>pjrc74</td>
-                    <td>mahn87</td>
-                    <td>87.7%</td>
-                </tr>
-                <tr>
-                    <td>iewy37</td>
-                    <td>abme20</td>
-                    <td>61.33%</td>
-                </tr>
-                <tr>
-                    <td>oeubc44</td>
-                    <td>lencb23</td>
-                    <td>44.7%</td>
-                </tr>
-                <tr>
-                    <td>pjrc74</td>
-                    <td>mahn87</td>
-                    <td>87.7%</td>
-                </tr>
-                <tr>
-                    <td>iewy37</td>
-                    <td>abme20</td>
-                    <td>61.33%</td>
-                </tr>
-                <tr>
-                    <td>oeubc44</td>
-                    <td>lencb23</td>
-                    <td>44.7%</td>
-                </tr>
-                <tr>
-                    <td>pjrc74</td>
-                    <td>mahn87</td>
-                    <td>87.7%</td>
-                </tr>
-                <tr>
-                    <td>iewy37</td>
-                    <td>abme20</td>
-                    <td>61.33%</td>
-                </tr>
-                <tr>
-                    <td>oeubc44</td>
-                    <td>lencb23</td>
-                    <td>44.7%</td>
-                </tr>
-                <tr>
-                    <td>pjrc74</td>
-                    <td>mahn87</td>
-                    <td>87.7%</td>
-                </tr>
-                <tr>
-                    <td>iewy37</td>
-                    <td>abme20</td>
-                    <td>61.33%</td>
-                </tr>
-                <tr>
-                    <td>oeubc44</td>
-                    <td>lencb23</td>
-                    <td>44.7%</td>
-                </tr>
-            </tbody>
-        </table>
+    <div id="studentList" class="col-md-8">
+       
     </div>
 
 </div>
@@ -152,6 +79,7 @@
                     data: data,
                     success: function (result) {
                         $("#spinner").hide();
+                        $("#studentList").html(result);
                         console.log(result);
                     },
                     error: function (xhr, status, p3, p4) {

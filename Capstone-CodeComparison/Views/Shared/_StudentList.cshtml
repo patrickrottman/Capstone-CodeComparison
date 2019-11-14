@@ -1,0 +1,19 @@
+﻿@model List<String>
+
+<h2>Sample Output:</h2>
+<p>This is where similarity percentages will be displayed as well as the corresponding pawprints.</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Pawprint</th>
+            <th>Pawprint</th>
+            <th>Similarity Percentage</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (String student in Model)
+        {
+           @Html.Raw(student);
+        }
+    </tbody>
+</table>

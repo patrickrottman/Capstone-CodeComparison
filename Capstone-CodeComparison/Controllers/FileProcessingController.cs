@@ -6,20 +6,39 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Net;
 using System.IO;
+using System.IO.Compression;
+using Capstone_CodeComparison.Models;
 
 namespace Capstone_CodeComparison.Controllers
 {
     public class FileProcessingController : Controller
     {
         // GET: FileProcessing
+
+        //things to do
+        //create output directory
+        //finish unzipping code
+        //paste remaining prewritten code
+        //change to work with asp.net
+        //take output and push to the view
+        //create modal to show similarity
+        //after everything working, add additional languages
+
+
+        //List<String> PythonFilter = new List<String> { "using", @"/" };
+        //List<String> 
+
+        List<StudentFile> studentFileList = new List<StudentFile>();
+        List<String> SimilarStudentFileNames = new List<String>();
         public ActionResult Index()
         {
             return View();
         }
 
         [HttpPost]
-        public JsonResult Upload()
+        public PartialViewResult Upload()
         {
+
             try
             {
                 foreach (string file in Request.Files)
@@ -30,28 +49,61 @@ namespace Capstone_CodeComparison.Controllers
                         // get a stream
                         var stream = fileContent.InputStream;
                         var fileName = Path.GetFileName(file);
-                        
+
                         byte[] data = new byte[stream.Length];
                         int br = stream.Read(data, 0, data.Length);
 
 
                         Session["FileContent"] = data;
                         Session["FileContentName"] = fileName;
+                        String PersonalFolderPath = @"c:\" + Guid.NewGuid();
+                        Session["PersonalFolderPath"] = PersonalFolderPath;
+                        Directory.CreateDirectory(PersonalFolderPath);
+                        Session["OuputFolderPath"] = PersonalFolderPath + @"\" + "output";
+                        Directory.CreateDirectory(Session["OuputFolderPath"].ToString());
+                        Session["ZipFileLocation"] = PersonalFolderPath + @"\" + fileName;
+                        stream.Position = 0;
+                        using (var fileStream = System.IO.File.Create(PersonalFolderPath + @"\" + fileName))
+                        {
+                            stream.CopyTo(fileStream);
+                        }
 
                         //https://stackoverflow.com/questions/31914568/save-an-attachment-in-session
 
-                        return Json("File uploaded successfully", JsonRequestBehavior.AllowGet);
+                        startUnzip_Click();
+                        StartCheckingStudents();
+                        return PartialView("_StudentList", SimilarStudentFileNames);
                     }
                 }
             }
             catch (Exception)
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                return Json("Upload failed", JsonRequestBehavior.AllowGet);
+                return null;
             }
 
-            return Json("exiting upload", JsonRequestBehavior.AllowGet);
-            
+            return null;
+
+        }
+
+        [HttpPost]
+        public void DeleteSessionFolder()
+        {
+
+            if (Session["PersonalFolderPath"] != null)
+            {
+                String path = Session["PersonalFolderPath"].ToString();
+                if (Directory.Exists(path))
+                {
+
+                    Directory.Delete(path, true);
+                    Session["FileContent"] = null;
+                    Session["FileContentName"] = null;
+                    Session["PersonalFolderPath"] = null;
+                    Session["OuputFolderPath"] = null;
+                    Session["ZipFileLocation"] = null;
+                }
+            }
         }
 
         public ActionResult Download()
@@ -66,5 +118,160 @@ namespace Capstone_CodeComparison.Controllers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public void startUnzip_Click()
+        {
+            String ExportFolderLocation = Session["OuputFolderPath"] as String;
+            String ZipFilesLocation = Session["ZipFileLocation"] as String;
+
+            //Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait; // set the cursor to loading spinner
+            if ((ZipFilesLocation != null && ZipFilesLocation != "") || ExportFolderLocation != null && ExportFolderLocation != "")
+            {
+                System.IO.Compression.ZipFile.ExtractToDirectory(ZipFilesLocation, ExportFolderLocation);
+                DirectoryInfo d = new DirectoryInfo(ExportFolderLocation);
+                FileInfo[] Files = d.GetFiles("*.zip");
+                String customFolder;
+                foreach (FileInfo file in Files)
+                {
+                    try
+                    {
+                        customFolder = ExportFolderLocation + @"\" + file.Name.Substring(0, file.Name.Length - 4);
+                        Directory.CreateDirectory(customFolder);
+                        ZipFile.ExtractToDirectory(file.FullName, customFolder);
+                        System.IO.File.Delete(file.FullName);
+
+                    }
+                    catch (Exception error)
+                    {
+                        //System.Windows.MessageBox.Show("Unable to extract " + file.Name + " due to: " + error.Message);
+                    }
+                }
+            }
+            //else
+            {
+                //System.Windows.MessageBox.Show("Please choose file directory first.");
+                //Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow; // set the cursor back to arrow
+                //return;
+            }
+            //Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow; // set the cursor back to arrow
+        }
+
+        public void StartCheckingStudents()
+        {
+            WalkDirectoryTree(new DirectoryInfo(Session["OuputFolderPath"] as String));
+            List<StudentFile> outerList = studentFileList;
+            List<StudentFile> innerList = studentFileList;
+
+            foreach (StudentFile student in outerList.ToList())
+            {
+                innerList = studentFileList;
+                foreach (StudentFile innerStudent in innerList.ToList())
+                {
+                    if (student.fileName != innerStudent.fileName)
+                    {
+                        double similarity = SimilarityinPercentage(student.fileContents, innerStudent.fileContents);
+                        if (similarity > 50)
+                        {
+                            SimilarStudentFileNames.Add("<tr><td>" + student.fileName + "</td><td>" + innerStudent.fileName + "</td><td>" + similarity.ToString("0.00") + "%</td></tr>");
+                        }
+                    }
+                }
+                outerList.Remove(student);
+            }
+        }
+
+        private void WalkDirectoryTree(DirectoryInfo dr)
+        {
+            String studentFileName;
+            foreach (FileInfo file in FindFiles(dr, "*.xaml.cs"))
+            {
+                // process file
+                if (file.Name != "App.xaml.cs")
+                {
+                    String outputLocation = Session["OuputFolderPath"] as String;
+                    studentFileName = file.FullName.Replace(outputLocation, "");
+                    studentFileName = studentFileName.Substring(4, studentFileName.Length - 4);
+                    studentFileName = studentFileName.Substring(0, studentFileName.IndexOf(@"\"));
+                    studentFileName = studentFileName.Substring(0, studentFileName.IndexOf("_"));
+                    //file.Name.Substring(0, file.Name.Length - 4);
+
+
+                    StudentFile tempStudent = new StudentFile(studentFileName, System.IO.File.ReadAllText(file.FullName));
+                    studentFileList.Add(tempStudent);
+
+                    //bool checking = true;
+
+                    //if (!FileNames.HasItems)
+                    //{
+                    //    FileNames.Items.Add(tempStudent.fileName);
+                    //}
+                    //else
+                    //{
+                    //    foreach (var name in FileNames.Items)
+                    //    {
+                    //        if (name.ToString().Equals(tempStudent.fileName))
+                    //        {
+                    //            checking = false;
+                    //        }
+                    //    }
+                    //    if (checking == true)
+                    //    {
+                    //        FileNames.Items.Add(tempStudent.fileName);
+                    //    }
+                    //}
+                }
+            }
+        }
+
+        public IEnumerable<FileInfo> FindFiles(DirectoryInfo startDirectory, string pattern)
+        {
+            IEnumerable<FileInfo> files = startDirectory.EnumerateFiles(pattern, SearchOption.AllDirectories);
+            return files;
+        }
+
+        public double SimilarityinPercentage(String original, String comparison)
+        {
+            original = original.Replace("\r", "");
+            comparison = comparison.Replace("\r", "");
+
+            original = original.Replace("\"", "");
+            comparison = comparison.Replace("\"", "");
+
+            original = original.Replace("{", "");
+            comparison = comparison.Replace("{", "");
+
+            original = original.Replace("}", "");
+            comparison = comparison.Replace("}", "");
+
+
+
+            IQueryable<String> splitString1 = original.Split('\n').AsQueryable();
+            IQueryable<String> splitString2 = comparison.Split('\n').AsQueryable();
+
+            splitString1 = splitString1.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
+            splitString2 = splitString2.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
+
+            splitString1 = splitString1.Where(x => !x.Contains("using")).AsQueryable();
+            splitString2 = splitString2.Where(x => !x.Contains("using")).AsQueryable();
+
+            splitString1 = splitString1.Where(x => !x.Contains("///")).AsQueryable();
+            splitString2 = splitString2.Where(x => !x.Contains("///")).AsQueryable();
+
+
+
+            // code from http://www.dotnetworld.in/2013/05/c-find-similarity-between-two-strings.html
+            var strCommon = splitString1.Intersect(splitString2);
+            //Formula : Similarity (%) = 100 * (CommonItems * 2) / (Length of String1 + Length of String2)
+            double Similarity = (double)(100 * (strCommon.Count() * 2)) / (splitString1.Count() + splitString2.Count());
+            Console.WriteLine("Strings are {0}% similar", Similarity.ToString("0.00"));
+
+            //ulong oldCount = ulong.Parse(counter.Text) + ulong.Parse(splitString1.Count().ToString()) * ulong.Parse(splitString2.Count().ToString());
+
+            //counter.Text = oldCount.ToString();
+
+            return Similarity;
+        }
     }
 }
