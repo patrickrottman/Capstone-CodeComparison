@@ -118,7 +118,7 @@ namespace Capstone_CodeComparison.Controllers
                 //user must be downloading
                 LanguageFileType = ".doesntExist";
             }
-            
+
             try
             {
                 foreach (string file in Request.Files)
@@ -256,10 +256,13 @@ namespace Capstone_CodeComparison.Controllers
                 {
                     if (student.studentName != innerStudent.studentName)
                     {
-                        Tuple<double, List<String>> similarity = SimilarityinPercentage(student.fileContents, innerStudent.fileContents);
-                        if (similarity.Item1 > 0)
+                        if (student.fileContents != "" && innerStudent.fileContents != "")
                         {
-                            SimilarStudentDataList.Add(new SimilarStudentData(student.studentName, innerStudent.studentName, student.fileContents, innerStudent.fileContents, student.fileName, innerStudent.fileName, Math.Round(similarity.Item1, 3, MidpointRounding.ToEven), similarity.Item2));// "<tr><td>" + student.fileName + "</td><td>" + innerStudent.fileName + "</td><td>" + similarity.ToString("0.00") + "%</td></tr>");
+                            Tuple<double, List<String>> similarity = SimilarityinPercentage(student.fileContents, innerStudent.fileContents);
+                            if (similarity.Item1 > 0)
+                            {
+                                SimilarStudentDataList.Add(new SimilarStudentData(student.studentName, innerStudent.studentName, student.fileContents, innerStudent.fileContents, student.fileName, innerStudent.fileName, Math.Round(similarity.Item1, 3, MidpointRounding.ToEven), similarity.Item2));// "<tr><td>" + student.fileName + "</td><td>" + innerStudent.fileName + "</td><td>" + similarity.ToString("0.00") + "%</td></tr>");
+                            }
                         }
                     }
                 }
@@ -325,8 +328,8 @@ namespace Capstone_CodeComparison.Controllers
 
         public Tuple<double, List<String>> SimilarityinPercentage(String original, String comparison)
         {
-            //original = original.Replace("\r", "");
-            //comparison = comparison.Replace("\r", "");
+            original = original.Replace("\r", "");
+            comparison = comparison.Replace("\r", "");
 
             //original = original.Replace("\"", "");
             //comparison = comparison.Replace("\"", "");
