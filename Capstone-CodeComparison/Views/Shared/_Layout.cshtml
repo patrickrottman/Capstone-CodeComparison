@@ -49,27 +49,33 @@
 
     // async: false will make the AJAX synchronous in case you're using jQuery
     $(window).on("beforeunload", function () {
-        $.ajax({
-            type: "POST",
-            url: "@Url.Action("DeleteSessionFolder", "FileProcessing")",
-        });
+        if (!window.location.href.indexOf("Download") > -1) {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("DeleteSessionFolder", "FileProcessing")",
+            });
+        }
     });
 
     window.onbeforeunload = function (e) {
-        $.ajax({
-            type: "POST",
-            url: "@Url.Action("DeleteSessionFolder", "FileProcessing")",
-        });
+        if (!window.location.href.indexOf("Download") > -1) {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("DeleteSessionFolder", "FileProcessing")",
+            });
+        }
     }
 
     $(document).ready(function()
     {
-        $(window).bind("beforeunload", function () {
+        if (!window.location.href.indexOf("Download") > -1) {
+            $(window).bind("beforeunload", function () {
                 $.ajax({
                     type: "POST",
                     url: "@Url.Action("DeleteSessionFolder", "FileProcessing")",
                 });
-    });
+            });
+        }
 });
 
 </script>

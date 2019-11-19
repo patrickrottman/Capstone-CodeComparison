@@ -39,10 +39,10 @@ namespace Capstone_CodeComparison.Controllers
         String CSSFileType = "*.css";
         String PythonFileType = "*.py";
 
-        List<String> PythonFilter = new List<String> {"#", "import"};
-        List<String> CSharpFilter = new List<String> {"///", "using", "//"};
-        List<String> HTMLFilter = new List<String> { "//"};
-        List<String> CFilter = new List<String> {"#include", "//", "/*", "*", "*/"};
+        List<String> PythonFilter = new List<String> { "#", "import" };
+        List<String> CSharpFilter = new List<String> { "///", "using", "//" };
+        List<String> HTMLFilter = new List<String> { "//" };
+        List<String> CFilter = new List<String> { "#include", "//", "/*", "*", "*/" };
         List<String> CSSFilter = new List<String> { "//", "/*", "*/" };
         List<String> JavaFilter = new List<String> { "//", "/*", "*/" };
 
@@ -54,7 +54,7 @@ namespace Capstone_CodeComparison.Controllers
         {
             return View();
         }
-        
+
         [HttpGet]
         public ActionResult Start(String SelectedLanguage)
         {
@@ -73,44 +73,51 @@ namespace Capstone_CodeComparison.Controllers
         [HttpPost]
         public PartialViewResult Upload()
         {
-
-            String SelectedLanguage = Session["SelectedLanguage"].ToString();
-            if(SelectedLanguage == "C#")
+            if (Session["SelectedLanguage"] != null)
             {
-                LanguageFileType = CSharpFileType;
-                StringsToFilterOut = CSharpFilter;
+                String SelectedLanguage = Session["SelectedLanguage"].ToString();
+                if (SelectedLanguage == "C#")
+                {
+                    LanguageFileType = CSharpFileType;
+                    StringsToFilterOut = CSharpFilter;
+                }
+                if (SelectedLanguage == "HTML")
+                {
+                    LanguageFileType = HTMLFileType;
+                    StringsToFilterOut = HTMLFilter;
+                }
+                if (SelectedLanguage == "C")
+                {
+                    LanguageFileType = CFileType;
+                    StringsToFilterOut = CFilter;
+                }
+                if (SelectedLanguage == "Python")
+                {
+                    LanguageFileType = PythonFileType;
+                    StringsToFilterOut = PythonFilter;
+                }
+                if (SelectedLanguage == "CSS")
+                {
+                    LanguageFileType = CSSFileType;
+                    StringsToFilterOut = CSSFilter;
+                }
+                if (SelectedLanguage == "Java")
+                {
+                    LanguageFileType = JavaFileType;
+                    StringsToFilterOut = JavaFilter;
+                }
+                if (SelectedLanguage == "WPF")
+                {
+                    LanguageFileType = WPFFileType;
+                    StringsToFilterOut = CSharpFilter;
+                }
             }
-            if (SelectedLanguage == "HTML")
+            else
             {
-                LanguageFileType = HTMLFileType;
-                StringsToFilterOut = HTMLFilter;
+                //user must be downloading
+                LanguageFileType = ".doesntExist";
             }
-            if (SelectedLanguage == "C")
-            {
-                LanguageFileType = CFileType;
-                StringsToFilterOut = CFilter;
-            }
-            if (SelectedLanguage == "Python")
-            {
-                LanguageFileType = PythonFileType;
-                StringsToFilterOut = PythonFilter;
-            }
-            if (SelectedLanguage == "CSS")
-            {
-                LanguageFileType = CSSFileType;
-                StringsToFilterOut = CSSFilter;
-            }
-            if (SelectedLanguage == "Java")
-            {
-                LanguageFileType = JavaFileType;
-                StringsToFilterOut = JavaFilter;
-            }
-            if (SelectedLanguage == "WPF")
-            {
-                LanguageFileType = WPFFileType;
-                StringsToFilterOut = CSharpFilter;
-            }
-
+            
             try
             {
                 foreach (string file in Request.Files)
@@ -178,11 +185,15 @@ namespace Capstone_CodeComparison.Controllers
             }
         }
 
-        public ActionResult Download()
+        public FileResult Download()
         {
-            if (Session["FileContent"] != null)
+            if (Session["OuputFolderPath"] != null)
             {
-                return File(Session["FileContent"] as byte[], System.Net.Mime.MediaTypeNames.Application.Octet, Session["FileContentName"].ToString());
+                System.IO.Compression.ZipFile.CreateFromDirectory(Session["OuputFolderPath"] as String, (Session["PersonalFolderPath"] as String) + @"\" + "output.zip");
+
+                byte[] fileBytes = System.IO.File.ReadAllBytes((Session["PersonalFolderPath"] as String) + @"\" + "output.zip");
+                string fileName = "output.zip";
+                return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
             }
             else
             {
@@ -325,7 +336,7 @@ namespace Capstone_CodeComparison.Controllers
             splitString1 = splitString1.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
             splitString2 = splitString2.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
 
-            foreach(String filter in StringsToFilterOut)
+            foreach (String filter in StringsToFilterOut)
             {
                 splitString1 = splitString1.Where(x => !x.Contains(filter)).AsQueryable();
                 splitString2 = splitString2.Where(x => !x.Contains(filter)).AsQueryable();

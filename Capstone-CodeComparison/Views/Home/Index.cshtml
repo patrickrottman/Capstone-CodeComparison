@@ -41,8 +41,8 @@
 
         <br />
         <div class="btn-group" role="group">
-            @Html.ActionLink("Download", "Download", "FileProcessing", null, new { @class = "btn btn-info", type = "download" })
-            @*<button onclick="Upload()" class="btn btn-info" title="Download the original canvas file that has all of it's internal files unzipped.">Download</button>*@
+            @*@Html.ActionLink("Download", "Download", "FileProcessing", null, new { @class = "btn btn-info", type = "download", target = "_blank" })*@
+            <button onclick="Upload(true)" class="btn btn-info" title="Download the original canvas file that has all of it's internal files unzipped.">Download</button>
             <button onclick="Start()" class="btn btn-success">Scan Similarities</button>
         </div>
         <div class="loader" id="spinner"></div>
@@ -50,7 +50,8 @@
     </div>
 
     <div id="studentList" class="col-md-8">
-
+        <h2>Output:</h2>
+        <p>This is where similarity percentages will be displayed as well as the corresponding pawprints once a file is uploaded and language is chosen.</p>
     </div>
 
 </div>
@@ -69,7 +70,7 @@
             data: { SelectedLanguage: SelectedLanguage },
             dataType:'text',
             success: function () {
-                Upload();
+                Upload(false);
             },
             error: function (response) {
                 alert(response.responseText);
@@ -77,11 +78,11 @@
             }
         });
 
-        
+
     }
 
-    function Upload() {
-        
+    function Upload(isDownload) {
+        $("#spinner").show();
 
         var files = document.getElementById("canvasUpload").files;
         if (files.length > 0) {
@@ -98,8 +99,14 @@
                     processData: false,
                     data: data,
                     success: function (result) {
-                        $("#spinner").hide();
-                        $("#studentList").html(result);
+                        
+                        if (isDownload == false) {
+                            $("#studentList").html(result);
+                            $("#spinner").hide();
+                        } else {
+                            Download();
+                            $("#spinner").hide();
+                        }
                         console.log(result);
                     },
                     error: function (xhr, status, p3, p4) {
@@ -120,6 +127,26 @@
             $("#spinner").hide();
         }
 
+    }
+
+    function Download() {
+        $.ajax({
+        url: "@Url.Action("Download", "FileProcessing")",
+        method: 'GET',
+        xhrFields: {
+            responseType: 'blob'
+        },
+        success: function (data) {
+            var a = document.createElement('a');
+            var url = window.URL.createObjectURL(data);
+            a.href = url;
+            a.download = 'output.zip';
+            document.body.append(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        }
+    });
     }
 
     $(function () {
