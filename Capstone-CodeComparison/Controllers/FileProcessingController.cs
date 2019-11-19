@@ -28,16 +28,88 @@ namespace Capstone_CodeComparison.Controllers
         //List<String> PythonFilter = new List<String> { "using", @"/" };
         //List<String> 
 
+        String LanguageFileType = null;
+        List<String> StringsToFilterOut = new List<String>();
+
+        String CFileType = "*.c";
+        String CSharpFileType = "*.cs";
+        String WPFFileType = "*.xaml.cs";
+        String HTMLFileType = "*.html";
+        String JavaFileType = "*.java";
+        String CSSFileType = "*.css";
+        String PythonFileType = "*.py";
+
+        List<String> PythonFilter = new List<String> {"#", "import"};
+        List<String> CSharpFilter = new List<String> {"///", "using", "//"};
+        List<String> HTMLFilter = new List<String> { "//"};
+        List<String> CFilter = new List<String> {"#include", "//", "/*", "*", "*/"};
+        List<String> CSSFilter = new List<String> { "//", "/*", "*/" };
+        List<String> JavaFilter = new List<String> { "//", "/*", "*/" };
+
+
+
         List<StudentFile> studentFileList = new List<StudentFile>();
         List<String> SimilarStudentFileNames = new List<String>();
         public ActionResult Index()
         {
             return View();
         }
+        
+        [HttpGet]
+        public ActionResult Start(String SelectedLanguage)
+        {
+            if (SelectedLanguage != null && SelectedLanguage != "" && SelectedLanguage != "Choose Language:")
+            {
+                Session["SelectedLanguage"] = SelectedLanguage;
+                return Json(new { success = true, responseText = "Success." }, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Json("Choose a language.", JsonRequestBehavior.AllowGet);
+            }
+        }
 
         [HttpPost]
         public PartialViewResult Upload()
         {
+
+            String SelectedLanguage = Session["SelectedLanguage"].ToString();
+            if(SelectedLanguage == "C#")
+            {
+                LanguageFileType = CSharpFileType;
+                StringsToFilterOut = CSharpFilter;
+            }
+            if (SelectedLanguage == "HTML")
+            {
+                LanguageFileType = HTMLFileType;
+                StringsToFilterOut = HTMLFilter;
+            }
+            if (SelectedLanguage == "C")
+            {
+                LanguageFileType = CFileType;
+                StringsToFilterOut = CFilter;
+            }
+            if (SelectedLanguage == "Python")
+            {
+                LanguageFileType = PythonFileType;
+                StringsToFilterOut = PythonFilter;
+            }
+            if (SelectedLanguage == "CSS")
+            {
+                LanguageFileType = CSSFileType;
+                StringsToFilterOut = CSSFilter;
+            }
+            if (SelectedLanguage == "Java")
+            {
+                LanguageFileType = JavaFileType;
+                StringsToFilterOut = JavaFilter;
+            }
+            if (SelectedLanguage == "WPF")
+            {
+                LanguageFileType = WPFFileType;
+                StringsToFilterOut = CSharpFilter;
+            }
 
             try
             {
@@ -185,7 +257,7 @@ namespace Capstone_CodeComparison.Controllers
         private void WalkDirectoryTree(DirectoryInfo dr)
         {
             String studentFileName;
-            foreach (FileInfo file in FindFiles(dr, "*.xaml.cs"))
+            foreach (FileInfo file in FindFiles(dr, LanguageFileType))
             {
                 // process file
                 if (file.Name != "App.xaml.cs")
@@ -236,8 +308,8 @@ namespace Capstone_CodeComparison.Controllers
             original = original.Replace("\r", "");
             comparison = comparison.Replace("\r", "");
 
-            original = original.Replace("\"", "");
-            comparison = comparison.Replace("\"", "");
+            //original = original.Replace("\"", "");
+            //comparison = comparison.Replace("\"", "");
 
             original = original.Replace("{", "");
             comparison = comparison.Replace("{", "");
@@ -253,11 +325,11 @@ namespace Capstone_CodeComparison.Controllers
             splitString1 = splitString1.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
             splitString2 = splitString2.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
 
-            splitString1 = splitString1.Where(x => !x.Contains("using")).AsQueryable();
-            splitString2 = splitString2.Where(x => !x.Contains("using")).AsQueryable();
-
-            splitString1 = splitString1.Where(x => !x.Contains("///")).AsQueryable();
-            splitString2 = splitString2.Where(x => !x.Contains("///")).AsQueryable();
+            foreach(String filter in StringsToFilterOut)
+            {
+                splitString1 = splitString1.Where(x => !x.Contains(filter)).AsQueryable();
+                splitString2 = splitString2.Where(x => !x.Contains(filter)).AsQueryable();
+            }
 
 
 

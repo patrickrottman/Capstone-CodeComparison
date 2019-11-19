@@ -43,14 +43,14 @@
         <div class="btn-group" role="group">
             @Html.ActionLink("Download", "Download", "FileProcessing", null, new { @class = "btn btn-info", type = "download" })
             @*<button onclick="Upload()" class="btn btn-info" title="Download the original canvas file that has all of it's internal files unzipped.">Download</button>*@
-            <button onclick="Upload()" class="btn btn-success">Scan Similarities</button>
+            <button onclick="Start()" class="btn btn-success">Scan Similarities</button>
         </div>
         <div class="loader" id="spinner"></div>
 
     </div>
 
     <div id="studentList" class="col-md-8">
-       
+
     </div>
 
 </div>
@@ -59,9 +59,29 @@
 <script>
     $("#spinner").hide();
 
+    function Start() {
+        var SelectedLanguage = $("#languageDropDown option:selected").text();
+
+        $("#spinner").show();
+        $.ajax({
+            type: "GET",
+            url: "@Url.Action("Start", "FileProcessing")",
+            data: { SelectedLanguage: SelectedLanguage },
+            dataType:'text',
+            success: function () {
+                Upload();
+            },
+            error: function (response) {
+                alert(response.responseText);
+                $("#spinner").hide();
+            }
+        });
+
+        
+    }
 
     function Upload() {
-        $("#spinner").show();
+        
 
         var files = document.getElementById("canvasUpload").files;
         if (files.length > 0) {
@@ -83,6 +103,8 @@
                         console.log(result);
                     },
                     error: function (xhr, status, p3, p4) {
+                        $("#spinner").hide();
+                        alert("upload failed.");
                         var err = "Error " + " " + status + " " + p3 + " " + p4;
                         if (xhr.responseText && xhr.responseText[0] == "{")
                             err = JSON.parse(xhr.responseText).Message;
@@ -92,6 +114,10 @@
             } else {
                 alert("This browser doesn't support HTML5 file uploads!");
             }
+        } else {
+
+            alert("Choose a file to upload.");
+            $("#spinner").hide();
         }
 
     }
