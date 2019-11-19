@@ -129,12 +129,26 @@
     }
 
     function Download() {
-        var link = document.createElement("a");
-        link.download = name;
-        link.href = "@Url.Action("Download", "FileProcessing")";
-        link.click();
+        $.ajax({
+        url: "@Url.Action("Download", "FileProcessing")",
+        method: 'GET',
+        xhrFields: {
+            responseType: 'blob'
+        },
+        success: function (data) {
+            var a = document.createElement('a');
+            var url = window.URL.createObjectURL(data);
+            a.href = url;
+            a.download = 'output.zip';
+            document.body.append(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            $("#spinner").hide();
+        }
+    });
 
-        $("#spinner").hide();
+
 
     }
 
