@@ -9,13 +9,27 @@ namespace Capstone_CodeComparison.Models
 {
     public class StudentFile
     {
+        protected String StudentName;
         protected String FileName;
         protected String FileContents;
 
-        public StudentFile(String fileName, String fileContents)
+        public StudentFile(String studentName, String fileName, String fileContents)
         {
+            this.StudentName = studentName;
             this.FileName = fileName;
             this.FileContents = fileContents;
+        }
+
+        public String studentName
+        {
+            get
+            {
+                return StudentName;
+            }
+            set
+            {
+                StudentName = value;
+            }
         }
 
         public String fileName

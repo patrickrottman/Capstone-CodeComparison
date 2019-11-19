@@ -50,7 +50,7 @@ namespace Capstone_CodeComparison.Controllers
 
 
         List<StudentFile> studentFileList = new List<StudentFile>();
-        List<String> SimilarStudentFileNames = new List<String>();
+        List<SimilarStudentData> SimilarStudentDataList = new List<SimilarStudentData>();
         public ActionResult Index()
         {
             return View();
@@ -152,7 +152,7 @@ namespace Capstone_CodeComparison.Controllers
 
                         startUnzip_Click();
                         StartCheckingStudents();
-                        return PartialView("_StudentList", SimilarStudentFileNames);
+                        return PartialView("_StudentList", SimilarStudentDataList.OrderByDescending(x => x.SimilarityPercentage).Take(25).ToList());
                     }
                 }
             }
@@ -254,12 +254,12 @@ namespace Capstone_CodeComparison.Controllers
                 innerList = studentFileList;
                 foreach (StudentFile innerStudent in innerList.ToList())
                 {
-                    if (student.fileName != innerStudent.fileName)
+                    if (student.studentName != innerStudent.studentName)
                     {
-                        double similarity = SimilarityinPercentage(student.fileContents, innerStudent.fileContents);
-                        if (similarity > 50)
+                        Tuple<double, List<String>> similarity = SimilarityinPercentage(student.fileContents, innerStudent.fileContents);
+                        if (similarity.Item1 > 0)
                         {
-                            SimilarStudentFileNames.Add("<tr><td>" + student.fileName + "</td><td>" + innerStudent.fileName + "</td><td>" + similarity.ToString("0.00") + "%</td></tr>");
+                            SimilarStudentDataList.Add(new SimilarStudentData(student.studentName, innerStudent.studentName, student.fileContents, innerStudent.fileContents, student.fileName, innerStudent.fileName, Math.Round(similarity.Item1, 3, MidpointRounding.ToEven), similarity.Item2));// "<tr><td>" + student.fileName + "</td><td>" + innerStudent.fileName + "</td><td>" + similarity.ToString("0.00") + "%</td></tr>");
                         }
                     }
                 }
@@ -269,21 +269,28 @@ namespace Capstone_CodeComparison.Controllers
 
         private void WalkDirectoryTree(DirectoryInfo dr)
         {
-            String studentFileName;
+            String studentName;
             foreach (FileInfo file in FindFiles(dr, LanguageFileType))
             {
                 // process file
-                if (file.Name != "App.xaml.cs")
+                if (file.Name != "App.xaml.cs" && file.Name[0] != '.')
                 {
                     String outputLocation = Session["OuputFolderPath"] as String;
-                    studentFileName = file.FullName.Replace(outputLocation, "");
-                    studentFileName = studentFileName.Substring(4, studentFileName.Length - 4);
-                    studentFileName = studentFileName.Substring(0, studentFileName.IndexOf(@"\"));
-                    studentFileName = studentFileName.Substring(0, studentFileName.IndexOf("_"));
+                    studentName = file.FullName.Replace(outputLocation, "");
+                    studentName = studentName.Substring(1, studentName.Length - 1);
+                    if (studentName.IndexOf(@"\") == -1) //this means the person hasnt zipped their file. we can then use the begining of the file type to find the end of their name
+                    {
+                        studentName = studentName.Substring(0, studentName.IndexOf("."));
+                    }
+                    else
+                    {
+                        studentName = studentName.Substring(0, studentName.IndexOf(@"\"));
+                    }
+                    studentName = studentName.Substring(0, studentName.IndexOf("_"));
                     //file.Name.Substring(0, file.Name.Length - 4);
 
 
-                    StudentFile tempStudent = new StudentFile(studentFileName, System.IO.File.ReadAllText(file.FullName));
+                    StudentFile tempStudent = new StudentFile(studentName, file.Name, System.IO.File.ReadAllText(file.FullName));
                     studentFileList.Add(tempStudent);
 
                     //bool checking = true;
@@ -316,10 +323,10 @@ namespace Capstone_CodeComparison.Controllers
             return files;
         }
 
-        public double SimilarityinPercentage(String original, String comparison)
+        public Tuple<double, List<String>> SimilarityinPercentage(String original, String comparison)
         {
-            original = original.Replace("\r", "");
-            comparison = comparison.Replace("\r", "");
+            //original = original.Replace("\r", "");
+            //comparison = comparison.Replace("\r", "");
 
             //original = original.Replace("\"", "");
             //comparison = comparison.Replace("\"", "");
@@ -347,7 +354,7 @@ namespace Capstone_CodeComparison.Controllers
 
 
             // code from http://www.dotnetworld.in/2013/05/c-find-similarity-between-two-strings.html
-            var strCommon = splitString1.Intersect(splitString2);
+            List<String> strCommon = splitString1.Intersect(splitString2).ToList();
             //Formula : Similarity (%) = 100 * (CommonItems * 2) / (Length of String1 + Length of String2)
             double Similarity = (double)(100 * (strCommon.Count() * 2)) / (splitString1.Count() + splitString2.Count());
             Console.WriteLine("Strings are {0}% similar", Similarity.ToString("0.00"));
@@ -356,7 +363,7 @@ namespace Capstone_CodeComparison.Controllers
 
             //counter.Text = oldCount.ToString();
 
-            return Similarity;
+            return Tuple.Create(Similarity, strCommon);
         }
     }
     class MyEncoder : UTF8Encoding

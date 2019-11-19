@@ -1,4 +1,5 @@
-﻿@model List<String>
+﻿@using Capstone_CodeComparison.Extensions
+@model List<Capstone_CodeComparison.Models.SimilarStudentData>
 
 <h2>Sample Output:</h2>
 <p>This is where similarity percentages will be displayed as well as the corresponding pawprints.</p>
@@ -11,9 +12,58 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (String student in Model)
+        @foreach (Capstone_CodeComparison.Models.SimilarStudentData similarStudentData in Model)
         {
-           @Html.Raw(student);
+            <tr><td>@similarStudentData.FirstPawprint</td><td>@similarStudentData.SecondPawprint</td><td>@similarStudentData.SimilarityPercentage%</td></tr>
         }
     </tbody>
 </table>
+
+@foreach (Capstone_CodeComparison.Models.SimilarStudentData similarStudentData1 in Model)
+{
+    <div class="modal fade" id="@String.Concat(similarStudentData1.FirstPawprint, similarStudentData1.SecondPawprint, similarStudentData1.SimilarityPercentage.ToString().Replace(".", ""))" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="width: 100%">
+        <div class="modal-dialog" role="document" style="width: 96%">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h3 class="modal-title" id="exampleModalLabel">Similar files for @similarStudentData1.FirstPawprint and @similarStudentData1.SecondPawprint</h3>
+
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-md-6">
+                                <h5><b>@similarStudentData1.FirstPawprint: @similarStudentData1.FirstPawprintFileName</b></h5>
+                                <pre>@Html.Raw(similarStudentData1.FirstPawprintFileContents.HighlightKeyWords(String.Join(",", similarStudentData1.SimilarFileContents), "yellow", true))</pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><b>@similarStudentData1.SecondPawprint: @similarStudentData1.SecondPawprintFileName</b></h5>
+                                <pre>@Html.Raw(similarStudentData1.SecondPawprintFileContents.HighlightKeyWords(String.Join(",", similarStudentData1.SimilarFileContents), "yellow", true))</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $(document).ready(function () {
+        var table = $('.table').DataTable({
+            select: 'single',
+            "order": [[ 2, "desc" ]]
+        });
+
+        table.on('select', function (e, dt, type, indexes) {
+            var rowData = table.rows(indexes).data().toArray().toString();
+            $("#" + rowData.replace(',', '').replace(',', '').replace('%', '').replace('.','')).modal('show');
+            
+        });
+    });
+</script>
