@@ -8,6 +8,7 @@ using System.Net;
 using System.IO;
 using System.IO.Compression;
 using Capstone_CodeComparison.Models;
+using System.Text;
 
 namespace Capstone_CodeComparison.Controllers
 {
@@ -189,7 +190,8 @@ namespace Capstone_CodeComparison.Controllers
         {
             if (Session["OuputFolderPath"] != null)
             {
-                System.IO.Compression.ZipFile.CreateFromDirectory(Session["OuputFolderPath"] as String, (Session["PersonalFolderPath"] as String) + @"\" + "output.zip");
+                System.IO.Compression.ZipFile.CreateFromDirectory(Session["OuputFolderPath"] as String, (Session["PersonalFolderPath"] as String) + @"\" + "output.zip", System.IO.Compression.CompressionLevel.Optimal, true, new MyEncoder());
+
 
                 byte[] fileBytes = System.IO.File.ReadAllBytes((Session["PersonalFolderPath"] as String) + @"\" + "output.zip");
                 string fileName = "output.zip";
@@ -355,6 +357,18 @@ namespace Capstone_CodeComparison.Controllers
             //counter.Text = oldCount.ToString();
 
             return Similarity;
+        }
+    }
+    class MyEncoder : UTF8Encoding
+    {
+        public MyEncoder() : base(true)
+        {
+
+        }
+        public override byte[] GetBytes(string s)
+        {
+            s = s.Replace("\\", "/");
+            return base.GetBytes(s);
         }
     }
 }
