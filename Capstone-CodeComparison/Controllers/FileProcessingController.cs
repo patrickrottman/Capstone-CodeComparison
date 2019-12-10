@@ -152,7 +152,7 @@ namespace Capstone_CodeComparison.Controllers
 
                         startUnzip_Click();
                         StartCheckingStudents();
-                        return PartialView("_StudentList", SimilarStudentDataList.OrderByDescending(x => x.SimilarityPercentage).Take(25).ToList());
+                        return PartialView("_StudentList", SimilarStudentDataList.OrderByDescending(x => x.SimilarityPercentage).Take(15).ToList());
                     }
                 }
             }
@@ -370,10 +370,7 @@ namespace Capstone_CodeComparison.Controllers
             //Formula : Similarity (%) = 100 * (CommonItems * 2) / (Length of String1 + Length of String2)
             double Similarity = (double)100 * (strCommon.Count() * 2) / (splitString1Count + splitString2Count);
             Console.WriteLine("Strings are {0}% similar", Similarity.ToString("0.00"));
-            if(Similarity > 50)
-            {
-               bool test =  true;
-            }
+
             //ulong oldCount = ulong.Parse(counter.Text) + ulong.Parse(splitString1.Count().ToString()) * ulong.Parse(splitString2.Count().ToString());
 
             //counter.Text = oldCount.ToString();
