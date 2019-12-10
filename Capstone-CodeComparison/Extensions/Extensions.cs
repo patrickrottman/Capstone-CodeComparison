@@ -24,7 +24,7 @@ namespace Capstone_CodeComparison.Extensions
 
             foreach (string match in words)
             {
-                text = text.Replace(match.Trim(), "<span style=\"background-color:" + cssClass + "\">"+ match.Trim() +"</span>");
+                text = text.Replace(match.Trim(), "<span><span style=\"background-color:" + cssClass + "\">"+ match.Trim() +"</span></span>");
             }
             return text;
         }

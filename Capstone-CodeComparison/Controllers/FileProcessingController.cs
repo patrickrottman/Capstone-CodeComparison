@@ -350,6 +350,9 @@ namespace Capstone_CodeComparison.Controllers
             splitString1 = splitString1.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
             splitString2 = splitString2.Where(s => !string.IsNullOrWhiteSpace(s)).AsQueryable();
 
+            splitString1 = splitString1.Select(x => x.Trim());
+            splitString2 = splitString2.Select(x => x.Trim());
+
             foreach (String filter in StringsToFilterOut)
             {
                 splitString1 = splitString1.Where(x => !x.Contains(filter)).AsQueryable();
@@ -357,13 +360,20 @@ namespace Capstone_CodeComparison.Controllers
             }
 
 
-
+            int splitString1Count = splitString1.Count();
+            int splitString2Count = splitString2.Count();
             // code from http://www.dotnetworld.in/2013/05/c-find-similarity-between-two-strings.html
-            List<String> strCommon = splitString1.Intersect(splitString2).ToList();
-            //Formula : Similarity (%) = 100 * (CommonItems * 2) / (Length of String1 + Length of String2)
-            double Similarity = (double)(100 * (strCommon.Count() * 2)) / (splitString1.Count() + splitString2.Count());
-            Console.WriteLine("Strings are {0}% similar", Similarity.ToString("0.00"));
+            List<String> strCommon = splitString1.Where(x => splitString2.Contains(x)).ToList();
 
+            //List<int> result = list1.Where(i => list2.Contains(i)).ToList();
+
+            //Formula : Similarity (%) = 100 * (CommonItems * 2) / (Length of String1 + Length of String2)
+            double Similarity = (double)100 * (strCommon.Count() * 2) / (splitString1Count + splitString2Count);
+            Console.WriteLine("Strings are {0}% similar", Similarity.ToString("0.00"));
+            if(Similarity > 50)
+            {
+               bool test =  true;
+            }
             //ulong oldCount = ulong.Parse(counter.Text) + ulong.Parse(splitString1.Count().ToString()) * ulong.Parse(splitString2.Count().ToString());
 
             //counter.Text = oldCount.ToString();
