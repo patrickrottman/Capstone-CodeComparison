@@ -152,7 +152,7 @@ namespace Capstone_CodeComparison.Controllers
 
                         startUnzip_Click();
                         StartCheckingStudents();
-                        return PartialView("_StudentList", SimilarStudentDataList.OrderByDescending(x => x.SimilarityPercentage).Take(15).ToList());
+                        return PartialView("_StudentList", SimilarStudentDataList.OrderByDescending(x => x.SimilarityPercentage).Take(25).ToList());
                     }
                 }
             }
